@@ -6,11 +6,11 @@ import pytz
 from telegram import Bot
 
 # 🔐 Sekrety z GitHub
-TELEGRAM_TOKEN = os.getenv("8498642447:AAEepLUCIF9iiw_7WHxiGOQRJEuk6RN2Dd4")
-CHAT_ID = os.getenv("6987368615")
-ODDS_API_KEY = os.getenv("04d5f81d3868e1c8ef84210b657494a3")
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+ODDS_API_KEY = os.getenv("THE_ODDS_API_KEY")
 
-bot = Bot(token=8498642447:AAEepLUCIF9iiw_7WHxiGOQRJEuk6RN2Dd4)
+bot = Bot(token=TELEGRAM_TOKEN)
 
 # 🏀 Ustawienia
 LEAGUE = "basketball_nba"
@@ -56,7 +56,7 @@ def format_analysis(game):
     return text
 
 def send_to_telegram(message):
-    bot.send_message(chat_id=6987368615, text=message, parse_mode="Markdown")
+    bot.send_message(chat_id=CHAT_ID, text=message, parse_mode="Markdown")
 
 def main():
     games = get_games()
