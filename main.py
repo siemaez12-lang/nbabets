@@ -4,6 +4,22 @@ import pandas as pd
 import datetime as dt
 import pytz
 from telegram import Bot
+# 📊 Obrona rywala vs pozycja (CSV lokalne)
+DEFENSE_FILE = "defense_vs_position.csv"
+
+def load_defense_rankings():
+    if os.path.exists(DEFENSE_FILE):
+        df = pd.read_csv(DEFENSE_FILE)
+        return df.set_index("TEAM").to_dict(orient="index")
+    return {}
+
+DEFENSE_RANK = load_defense_rankings()
+
+def get_defense_rank(team_name, position):
+    try:
+        return DEFENSE_RANK[team_name][position]
+    except KeyError:
+        return "?"
 
 # 🔐 Sekrety z GitHub
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
@@ -44,6 +60,14 @@ def format_analysis(game):
                 name = outcome["name"]
                 line = outcome.get("point", "?")
                 price = outcome.get("price", "?")
+                position = "SF"  # 🧩 tu możesz w przyszłości ustalić pozycję z API zawodnika
+defense_rank = get_defense_rank(home if away in name else away, position)
+
+text += f"🎯 *{name}* — {market_name.replace('player_', '').replace('_', ' ')}: {line}\n"
+text += f"📈 Kurs: {price}\n"
+text += f"🧱 Obrona rywala (vs {position}): #{defense_rank} w lidze\n"
+text += f"📊 Analiza: {name} w ostatnich meczach prezentuje solidną formę, przeciwnik w środku tabeli pod względem obrony pozycji.\n\n"
+
 
                 if (name, market_name) in seen_players:
                     continue
