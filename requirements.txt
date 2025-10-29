@@ -1,0 +1,6 @@
+requests
+python-telegram-bot==20.5
+pandas
+pytz
+beautifulsoup4
+lxml
