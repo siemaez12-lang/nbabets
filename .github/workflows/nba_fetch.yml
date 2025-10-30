@@ -2,12 +2,17 @@ name: NBA Defense Data Fetch
 
 on:
   schedule:
-    - cron: "0 21 * * *"   # 22:00 CET (Polska) = 21:00 UTC
+    - cron: "0 21 * * *"   # 22:00 CET
   workflow_dispatch:
 
 jobs:
   fetch:
     runs-on: ubuntu-latest
+
+    env:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      THE_ODDS_API_KEY: ${{ secrets.THE_ODDS_API_KEY }}
 
     steps:
     - name: Checkout repo
@@ -16,12 +21,12 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.10'
+        python-version: "3.10"
 
     - name: Install requirements
       run: pip install -r requirements.txt
 
-    - name: Run NBA fetch script
+    - name: Run script
       run: python fetch_nba_defense.py
 
     - name: Commit & Push results
