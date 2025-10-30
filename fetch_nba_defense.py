@@ -1,21 +1,75 @@
 import requests
 import pandas as pd
+import time
 
-url = "https://cdn.nba.com/static/json/liveData/analytics/leagueDefenseStats.json"
+url = "https://stats.nba.com/stats/leaguedashteamstats"
+
+headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/117.0",
+    "Referer": "https://www.nba.com/",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Origin": "https://www.nba.com"
+}
+
+params = {
+    "College": "",
+    "Conference": "",
+    "Country": "",
+    "DateFrom": "",
+    "DateTo": "",
+    "Division": "",
+    "DraftPick": "",
+    "DraftYear": "",
+    "GameScope": "",
+    "GameSegment": "",
+    "Height": "",
+    "LastNGames": "0",
+    "LeagueID": "00",
+    "Location": "",
+    "MeasureType": "Defense",
+    "Month": "0",
+    "OpponentTeamID": "0",
+    "Outcome": "",
+    "PORound": "0",
+    "PaceAdjust": "N",
+    "PerMode": "PerGame",
+    "Period": "0",
+    "PlayerExperience": "",
+    "PlayerPosition": "",
+    "PlusMinus": "N",
+    "Rank": "Y",
+    "Season": "2025-26",
+    "SeasonSegment": "",
+    "SeasonType": "Regular Season",
+    "ShotClockRange": "",
+    "StarterBench": "",
+    "TeamID": "0",
+    "TwoWay": "0",
+    "VsConference": "",
+    "VsDivision": "",
+    "Weight": ""
+}
 
 print("🔁 Fetching NBA Defense Data...")
 
-try:
-    response = requests.get(url, timeout=10)
-    data = response.json()
-except Exception as e:
-    print("❌ Request failed:", e)
-    exit(1)
+for attempt in range(5):
+    try:
+        response = requests.get(url, params=params, headers=headers, timeout=10)
+        if response.status_code == 200 and response.text.strip() != "":
+            data = response.json()
+            break
+        print(f"⚠️ Attempt {attempt+1}/5 failed, retrying...")
+        time.sleep(3)
+    except Exception as e:
+        print(f"❌ Request failed: {e}")
+        time.sleep(3)
 
-teams = data["leagueDefenseStats"]["teams"]
+# Process data
+results = data["resultSets"][0]
+headers = results["headers"]
+rows = results["rowSet"]
 
-df = pd.DataFrame(teams)
+df = pd.DataFrame(rows, columns=headers)
+df.to_csv("nba_defense.csv", index=False)
 
-df.to_csv("nba_defense_overall.csv", index=False)
-
-print("✅ NBA defense data saved to nba_defense_overall.csv")
+print("✅ Defense data saved to nba_defense.csv")
