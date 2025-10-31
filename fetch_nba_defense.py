@@ -1,65 +1,48 @@
 import requests
-import pandas as pd
 import time
+import pandas as pd
 
-def fetch_data(url, params, headers):
-    for attempt in range(6):
-        try:
-            r = requests.get(url, params=params, headers=headers, timeout=20)
-            if r.status_code == 200 and r.text.strip() != "":
-                return r.json()
-            print(f"⚠️ Retry {attempt+1}/6 — status {r.status_code}")
-        except Exception as e:
-            print(f"❌ Error: {e}")
-        time.sleep(4)
-    return None
+URL = "https://stats.nba.com/stats/leaguedashteamstats"
 
-
-headers = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/117.0",
+HEADERS = {
+    "Connection": "keep-alive",
+    "Accept": "application/json, text/plain, */*",
+    "x-nba-stats-origin": "stats",
+    "x-nba-stats-token": "true",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
     "Referer": "https://www.nba.com/",
+    "Origin": "https://www.nba.com",
     "Accept-Language": "en-US,en;q=0.9",
-    "Origin": "https://www.nba.com"
 }
 
-params = {
-    "Season": "2025-26",
-    "SeasonType": "Regular Season",
-    "PerMode": "PerGame",
+PARAMS = {
     "MeasureType": "Defense",
-    "Rank": "Y",
-    "PaceAdjust": "N",
+    "PerMode": "PerGame",
+    "Season": "2024-25",  # Możesz zmieniać
+    "SeasonType": "Regular Season",
 }
 
-print("🔁 Fetching NBA Defense Data (main endpoint)...")
+def fetch_data():
+    for i in range(6):  # max 6 prób
+        try:
+            print(f"🔁 Fetching attempt {i+1}/6...")
+            r = requests.get(URL, headers=HEADERS, params=PARAMS, timeout=15)
+            if r.status_code == 200:
+                data = r.json()["resultSets"][0]
+                headers = data["headers"]
+                rows = data["rowSet"]
+                df = pd.DataFrame(rows, columns=headers)
+                df.to_csv("nba_defense.csv", index=False)
+                print("✅ Data saved to nba_defense.csv")
+                return
+            else:
+                print(f"⚠️ Status {r.status_code}, retry in 3s...")
+        except Exception as e:
+            print(f"❌ Error: {e}, retry in 3s...")
 
-main_url = "https://stats.nba.com/stats/leaguedashteamstats"
-data = fetch_data(main_url, params, headers)
+        time.sleep(3)
 
-# fallback backup endpoint (NBA internal API — easier to scrape)
-if data is None:
-    print("⚠️ Main API failed — switching to backup endpoint...")
-    backup_url = "https://cdn.nba.com/static/json/liveData/seasonTeamStats/seasonTeamStats_2025.json"
-    data = fetch_data(backup_url, {}, headers)
+    print("❌ Failed after 6 attempts")
 
-if data is None:
-    print("❌ Could not fetch NBA data — saving empty file to avoid workflow crash.")
-    pd.DataFrame().to_csv("nba_defense.csv", index=False)
-    exit(0)
-
-print("✅ Data received — processing...")
-
-# detect format (main API or backup)
-if "resultSets" in data:
-    results = data["resultSets"][0]
-    headers = results["headers"]
-    rows = results["rowSet"]
-    df = pd.DataFrame(rows, columns=headers)
-else:
-    # backup JSON
-    teams = data["teams"]
-    df = pd.DataFrame(teams)
-
-df.to_csv("nba_defense.csv", index=False)
-
-print("✅ Defense data saved to nba_defense.csv")
+if __name__ == "__main__":
+    fetch_data()
