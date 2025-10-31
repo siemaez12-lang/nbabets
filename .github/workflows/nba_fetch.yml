@@ -26,8 +26,12 @@ jobs:
     - name: Install requirements
       run: pip install -r requirements.txt
 
-    - name: Run script
-      run: python fetch_nba_defense.py
+    - name: Fetch defense ratings
+  run: python fetch_nba_defense.py
+
+- name: Fetch DvP
+  run: python fetch_dvp.py
+
 
     - name: Commit & Push results
       run: |
